@@ -3,6 +3,8 @@
 
 #include "includes.hpp"
 
+#define MAX_CLIENTS 3
+
 class Server {
 	private:
 		int					port;
@@ -14,7 +16,7 @@ class Server {
 		Server& operator=(const Server &copy);
 		~Server();
 		void		runServer();
-		
+		void		signalHandler();
 };
 
 #endif
