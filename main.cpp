@@ -1,18 +1,16 @@
 #include "inc/includes.hpp"
+#include "inc/server.hpp"
+#include "inc/tintin.hpp"
 
 int main()
 {
-	std::time_t now = std::time(nullptr);
-	std::tm* localTime = std::localtime(&now);
-
-	std::string ret = "[ " + std::to_string(localTime->tm_mday) + " / "
-              + std::to_string(localTime->tm_mon + 1) + " / " 
-              + std::to_string(localTime->tm_year + 1900) + " - "
-              + std::to_string(localTime->tm_hour) + " : " 
-              + std::to_string(localTime->tm_min) + " : " 
-              + std::to_string(localTime->tm_sec) + " ]";
-
-
-	std::cout << ret << std::endl;
-	return (0);
+	if (getuid() != 0)
+	{
+		std::cerr << "YOU NEED ROOT PERMISSIONS" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	Server server;
+	server.createFile();
+	server.runServer();
+	return 0;
 }

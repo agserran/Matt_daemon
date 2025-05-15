@@ -6,18 +6,16 @@ Tintin::~Tintin(){}
 
 Tintin::Tintin(const Tintin &copy)
 {
-	this->logName = copy.getLogName();
 	*this = copy;
 }
 
-Tintin &Tintin::operator=(const Tintin &copy)
+Tintin& Tintin::operator=(const Tintin &copy)
 {
-	this->logName = copy.getLogName();
-	*this = copy;
+	(void)copy;
 	return (*this);
 }
 
-std::string &Tintin::getDate() const
+std::string Tintin::getDate() const
 {
 	std::time_t now = std::time(nullptr);
 	std::tm* localTime = std::localtime(&now);
@@ -45,8 +43,6 @@ void Tintin::checker() const
 			std::cerr << "Error: couldn´t create the directory." << std::endl;
 		}
 	}
-	if (chmod(logPath.c_str(), 775) != 0)
-		std::cerr << "Error: chmod." << std::endl;
 }
 
 

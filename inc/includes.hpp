@@ -16,8 +16,5 @@
 #include <exception>
 #include <fcntl.h>
 #include <set>
-								
-#include "tintin.hpp"
-#include "server.hpp"
 
 #endif
