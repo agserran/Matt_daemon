@@ -21,4 +21,3 @@ Detecta quit desde cualquier cliente y ejecuta shutdown.
 
 Captura SIGTERM y SIGINT para liberar recursos y borrar lockfile.
 
-
