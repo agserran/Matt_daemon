@@ -4,12 +4,17 @@
 #include "includes.hpp"
 
 #define MAX_CLIENTS 3
+#define MAX_EVENTS 10
+
+class Tintin;
 
 class Server {
 	private:
-		int					port;
+		int									port;
 		struct sockaddr_in	servAddr;
-		int					socket_fd;
+		int									socket_fd;
+		std::set<int>				clients;
+		Tintin* tintin = new Tintin();
 	public:
 		Server();
 		Server(const Server &copy);

@@ -1,4 +1,4 @@
-#include "tintin.hpp"
+#include "../inc/tintin.hpp"
 
 Tintin::Tintin(){}
 

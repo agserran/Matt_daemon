@@ -13,7 +13,10 @@
 #include <ctime>
 #include <fstream>
 #include <sys/stat.h>
-
+#include <exception>
+#include <fcntl.h>
+#include <set>
+								
 #include "tintin.hpp"
 #include "server.hpp"
 
