@@ -11,11 +11,12 @@ class Tintin;
 
 class Server {
 	private:
-		int									port;
-		struct sockaddr_in	servAddr;
-		int									socket_fd;
-		std::set<int>				clients;
-		Tintin* tintin = new Tintin();
+		int										port;
+		struct sockaddr_in		servAddr;
+		int										socket_fd;
+		std::set<int>					clients;
+		Tintin* tintin = new	Tintin();
+		int										lock_fd;
 	public:
 		Server();
 		Server(const Server &copy);

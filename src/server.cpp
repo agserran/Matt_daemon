@@ -35,9 +35,14 @@ Server::~Server()
 
 void Server::unlinkFile()
 {
-	if (unlink("/var/lock/matt_daemon.lock") < 0)
+	if (this->lock_fd >= 0)
 	{
-		tintin->writeLog("[ERROR] unlink");
+		flock(this->lock_fd, LOCK_UN);
+		close(this->lock_fd);
+		if (unlink("/var/lock/matt_daemon.lock") < 0)
+		{
+			tintin->writeLog("[ERROR] unlink");
+		}
 	}
 }
 
@@ -52,8 +57,6 @@ void Server::sutDown(int socket_fd, int epoll_fd)
 	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, socket_fd, nullptr);
 	close(socket_fd);
 	close(epoll_fd);
-	tintin->writeLog("[INFO] Server closed");
-	delete(tintin);
 	unlinkFile();
 }
 
@@ -72,14 +75,12 @@ void	Server::runServer()
 	if (flags < 0)
 	{
 		tintin->writeLog("[ERROR] F_GETFL.");
-		delete(tintin);
 		exit(EXIT_FAILURE);
 	}
 	if (fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK) < 0)
 	{
 		tintin->writeLog("[ERROR] fcntl error");
 		close(socket_fd);
-		delete(tintin);
 		exit(EXIT_FAILURE);
 	}
 
@@ -99,7 +100,6 @@ void	Server::runServer()
 		tintin->writeLog("[ERROR] error creating socker fd");
 		close(socket_fd);
 		close(epoll_fd);
-		delete(tintin);
 		exit(EXIT_FAILURE) ;
 	}
 	while (true)
@@ -126,7 +126,6 @@ void	Server::runServer()
 						break;
 					else{
 						tintin->writeLog("Error: accept failed");
-						//std::cerr << std::strerror(errno) << std::endl;
 						continue;
 					}
 				}
@@ -166,15 +165,17 @@ void	Server::runServer()
 						if (n > 0)
 						{
 							std::string msg(buffer, n);
-							
+							while (!msg.empty() && (msg.back() == '\n' || msg.back() == '\r'))
+   							msg.pop_back();
 							if (msg == "quit")
 							{
 								Server::sutDown(socket_fd, epoll_fd);
+								return ;
 							}
 							
 							else
 							{
-								tintin->writeLog("[LOG]" + msg);
+								tintin->writeLog("[LOG] " + msg);
 							}
 						}
 						else if (n == -1 && errno == EAGAIN)
@@ -203,13 +204,27 @@ void	Server::runServer()
 void	Server::createFile()
 {
 	const char* path = "/var/lock/matt_daemon.lock";
+	if (access(path, F_OK) == 0)
+	{
+		tintin->writeLog("[ERROR] ONE DAEMON INSTANCE ALREADY RUNNING");
+		exit(EXIT_FAILURE);
+	}
 
-	int fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
+	this->lock_fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
+	std::ofstream lock(path, std::ios::app);
 
-	if (fd < 0)
+	lock << std::to_string(getpid());
+	if (this->lock_fd < 0)
 	{
 		std::cerr << "ERROR CREATING THE FILE" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	close(fd);
+
+	if (flock(this->lock_fd, LOCK_EX |LOCK_NB) < 0)
+	{
+		std::cerr << "ERROR: THERE IS ALREADY AN INSTANCE" << std::endl;
+		close(this->lock_fd);
+		exit(EXIT_FAILURE);
+	}
+	//close(fd);
 }

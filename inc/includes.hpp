@@ -16,5 +16,7 @@
 #include <exception>
 #include <fcntl.h>
 #include <set>
+#include <signal.h>
+#include <sys/file.h>
 
 #endif
