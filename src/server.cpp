@@ -221,15 +221,13 @@ void Server::createFile()
 	lock << std::to_string(getpid());
 	if (this->lock_fd < 0)
 	{
-		std::cerr << "ERROR CREATING THE FILE" << std::endl;
-		exit(EXIT_FAILURE);
+		fatalError("CANNOT CREATE THE LOG FILE");
 	}
 
 	if (flock(this->lock_fd, LOCK_EX | LOCK_NB) < 0)
 	{
-		std::cerr << "ERROR: THERE IS ALREADY AN INSTANCE" << std::endl;
+		fatalError("THERE IS ALREADY AN INSTANCE RUNNING");
 		close(this->lock_fd);
-		exit(EXIT_FAILURE);
 	}
 	// close(fd);
 }
