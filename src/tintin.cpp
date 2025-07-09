@@ -40,7 +40,7 @@ void Tintin::checker() const
 	{
 		if (mkdir(logDir.c_str(), 0777) != 0)
 		{
-			std::cerr << "Error: couldn´t create the directory." << std::endl;
+			fatalError("COULDN´T CREATE THE DIRECTORY");
 		}
 	}
 }
@@ -54,8 +54,7 @@ void Tintin::writeLog(const std::string &message) const
 	checker();
 	if (!logFile)
 		{
-			std::cerr << "Error: couldn´t open logFile." << std::endl;
-			return ;
+			fatalError("COULDN´T OPEN THE LOG FILE");
 		}
 	logFile << date + " " + message + "\n";
 	logFile.close();

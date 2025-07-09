@@ -42,8 +42,7 @@ int main()
 {
 	if (getuid() != 0)
 	{
-		std::cerr << "YOU NEED ROOT PERMISSIONS" << std::endl;
-		exit(EXIT_FAILURE);
+		fatalError("YOU NEED ROOT PERMISSIONS");
 	}
 	my_daemonize();
 	Server server;

@@ -19,4 +19,6 @@
 #include <signal.h>
 #include <sys/file.h>
 
+void fatalError(const std::string what);
+
 #endif
