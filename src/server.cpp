@@ -206,6 +206,26 @@ void Server::runServer()
 	return;
 }
 
+static const std::string readFirtsLine()
+{
+	std::ifstream file("/var/lock/matt_daemon.lock");
+	if (!file.is_open())
+		fatalError("CANNOT ACCESS TO LOCK FILE");
+	std::string line;
+	if (std::getline(file, line))
+		return line;
+	//fatalError("INVALID LOCKFILE");
+	return std::string{};
+}
+
+void	checkPID()
+{
+	pid_t pid = getpid();
+	std::string	lockPID = readFirtsLine();
+	if (std::to_string(pid) != lockPID)
+		fatalError("INVALID LOCKFILE, DIFERENT PID.");
+}
+
 void Server::createFile()
 {
 	const char *path = "/var/lock/matt_daemon.lock";
@@ -216,12 +236,16 @@ void Server::createFile()
 	}
 
 	this->lock_fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
-	std::ofstream lock(path, std::ios::app);
+	std::string pid = std::to_string(getpid());
+	if (write(lock_fd, pid.data(), pid.size()) != (ssize_t)pid.size())
+	{
+		close(lock_fd);
+		fatalError("CANNOT WRITE PID");
+	}
 
-	lock << std::to_string(getpid());
 	if (this->lock_fd < 0)
 	{
-		fatalError("CANNOT CREATE THE LOG FILE");
+		fatalError("CANNOT CREATE THE LO FILE");
 	}
 
 	if (flock(this->lock_fd, LOCK_EX | LOCK_NB) < 0)
@@ -229,5 +253,5 @@ void Server::createFile()
 		fatalError("THERE IS ALREADY AN INSTANCE RUNNING");
 		close(this->lock_fd);
 	}
-	// close(fd);
+	checkPID();
 }
