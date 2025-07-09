@@ -15,14 +15,14 @@ Server::Server(const Server &copy)
 	*this = copy;
 }
 
-Server& Server::operator=(const Server &other)
+Server &Server::operator=(const Server &other)
 {
- 	delete tintin;
-  port      = other.port;
-  servAddr  = other.servAddr;
-  socket_fd = other.socket_fd;
-  clients   = other.clients;
-  tintin = new Tintin(*other.tintin);
+	delete tintin;
+	port = other.port;
+	servAddr = other.servAddr;
+	socket_fd = other.socket_fd;
+	clients = other.clients;
+	tintin = new Tintin(*other.tintin);
 	return *this;
 }
 
@@ -46,7 +46,7 @@ void Server::unlinkFile()
 	}
 }
 
-void Server::sutDown(int socket_fd, int epoll_fd)
+void Server::shutDown(int socket_fd, int epoll_fd)
 {
 	for (int fd : Server::clients)
 	{
@@ -60,9 +60,9 @@ void Server::sutDown(int socket_fd, int epoll_fd)
 	unlinkFile();
 }
 
-void	Server::runServer()
+void Server::runServer()
 {
-	int	epoll_fd = epoll_create(10);
+	int epoll_fd = epoll_create(10);
 	if (epoll_fd == -1)
 	{
 		tintin->writeLog("[ERROR] error epoll");
@@ -71,7 +71,7 @@ void	Server::runServer()
 	struct epoll_event event, events[MAX_EVENTS];
 	event.events = EPOLLIN | EPOLLET;
 	event.data.fd = socket_fd;
-	int flags  = fcntl(socket_fd, F_GETFL, 0);
+	int flags = fcntl(socket_fd, F_GETFL, 0);
 	if (flags < 0)
 	{
 		tintin->writeLog("[ERROR] F_GETFL.");
@@ -84,15 +84,17 @@ void	Server::runServer()
 		exit(EXIT_FAILURE);
 	}
 
-	if (bind(socket_fd, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
-			tintin->writeLog(std::string("[ERROR] bind failed"));
-			exit(EXIT_FAILURE);
+	if (bind(socket_fd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0)
+	{
+		tintin->writeLog(std::string("[ERROR] bind failed"));
+		exit(EXIT_FAILURE);
 	}
 
 	// 3) listen()
-	if (listen(socket_fd, MAX_CLIENTS) < 0) {
-			tintin->writeLog(std::string("[ERROR] listen failed"));
-			exit(EXIT_FAILURE);
+	if (listen(socket_fd, MAX_CLIENTS) < 0)
+	{
+		tintin->writeLog(std::string("[ERROR] listen failed"));
+		exit(EXIT_FAILURE);
 	}
 
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event) == -1)
@@ -100,7 +102,7 @@ void	Server::runServer()
 		tintin->writeLog("[ERROR] error creating socker fd");
 		close(socket_fd);
 		close(epoll_fd);
-		exit(EXIT_FAILURE) ;
+		exit(EXIT_FAILURE);
 	}
 	while (true)
 	{
@@ -119,12 +121,13 @@ void	Server::runServer()
 			{
 				struct sockaddr_in clientAddr;
 				socklen_t addrlen = sizeof(clientAddr);
-				int clientFd = accept(socket_fd, (struct sockaddr*)&clientAddr, &addrlen);
+				int clientFd = accept(socket_fd, (struct sockaddr *)&clientAddr, &addrlen);
 				if (clientFd == -1)
 				{
 					if (errno == EAGAIN || errno == EWOULDBLOCK)
 						break;
-					else{
+					else
+					{
 						tintin->writeLog("Error: accept failed");
 						continue;
 					}
@@ -139,11 +142,11 @@ void	Server::runServer()
 					if (fcntl(clientFd, F_SETFL, O_NONBLOCK) != 0)
 					{
 						tintin->writeLog("[ERROR] fcntl error");
-						
 					}
 					event.events = EPOLLIN | EPOLLET;
 					event.data.fd = clientFd;
-					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, clientFd, &event) < 0) {
+					if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, clientFd, &event) < 0)
+					{
 						tintin->writeLog("[ERROR] cannot add client " + std::to_string(clientFd));
 						close(clientFd);
 						continue;
@@ -155,45 +158,47 @@ void	Server::runServer()
 					}
 				}
 			}
-			else {
-					int clientFd = events[i].data.fd;
-					char buffer[1024];
-					while (true)
-					{
-						ssize_t n = recv(clientFd, buffer, sizeof(buffer), 0);
+			else
+			{
+				int clientFd = events[i].data.fd;
+				char buffer[1024];
+				while (true)
+				{
+					ssize_t n = recv(clientFd, buffer, sizeof(buffer), 0);
 
-						if (n > 0)
+					if (n > 0)
+					{
+						std::string msg(buffer, n);
+						while (!msg.empty() && (msg.back() == '\n' || msg.back() == '\r'))
+							msg.pop_back();
+						if (msg == "quit")
 						{
-							std::string msg(buffer, n);
-							while (!msg.empty() && (msg.back() == '\n' || msg.back() == '\r'))
-   							msg.pop_back();
-							if (msg == "quit")
-							{
-								Server::sutDown(socket_fd, epoll_fd);
-								return ;
-							}
-							
-							else
-							{
-								tintin->writeLog("[LOG] " + msg);
-							}
+							Server::shutDown(socket_fd, epoll_fd);
+							return;
 						}
-						else if (n == -1 && errno == EAGAIN)
-							break;
-						else if (n == 0)
+
+						else
 						{
-							if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientFd, nullptr) < 0)
-							{
-								tintin->writeLog("[ERROR] error EPOLL_CTL_DEL");
-							}
-							else {
-								close (clientFd);
-								Server::clients.erase(clientFd);
-								break;
-							}
+							tintin->writeLog("[LOG] " + msg);
+						}
+					}
+					else if (n == -1 && errno == EAGAIN)
+						break;
+					else if (n == 0)
+					{
+						if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientFd, nullptr) < 0)
+						{
+							tintin->writeLog("[ERROR] error EPOLL_CTL_DEL");
+						}
+						else
+						{
+							close(clientFd);
+							Server::clients.erase(clientFd);
+							break;
 						}
 					}
 				}
+			}
 		}
 	}
 	close(socket_fd);
@@ -201,9 +206,9 @@ void	Server::runServer()
 	return;
 }
 
-void	Server::createFile()
+void Server::createFile()
 {
-	const char* path = "/var/lock/matt_daemon.lock";
+	const char *path = "/var/lock/matt_daemon.lock";
 	if (access(path, F_OK) == 0)
 	{
 		tintin->writeLog("[ERROR] ONE DAEMON INSTANCE ALREADY RUNNING");
@@ -220,11 +225,11 @@ void	Server::createFile()
 		exit(EXIT_FAILURE);
 	}
 
-	if (flock(this->lock_fd, LOCK_EX |LOCK_NB) < 0)
+	if (flock(this->lock_fd, LOCK_EX | LOCK_NB) < 0)
 	{
 		std::cerr << "ERROR: THERE IS ALREADY AN INSTANCE" << std::endl;
 		close(this->lock_fd);
 		exit(EXIT_FAILURE);
 	}
-	//close(fd);
+	// close(fd);
 }
