@@ -8,16 +8,14 @@ void my_daemonize()
 
 	pid = fork();
 
-	if (pid < 0) //error
+	if (pid < 0)
 		exit(EXIT_FAILURE);
 
-	if (pid > 0) //success
+	if (pid > 0)
 		exit(EXIT_SUCCESS);
 	
-	if (setsid() < 0) //if < 0 fail, on success the child process becomes the session leader
+	if (setsid() < 0)
 		exit(EXIT_FAILURE);
-	
-	//SIGNALHANDLER
 
 	pid = fork();
 
@@ -47,6 +45,10 @@ int main()
 	my_daemonize();
 	Server server;
 	server.createFile();
+	signal(SIGINT, signalHandle);
+	signal(SIGTERM, signalHandle);
+	signal(SIGKILL, signalHandle);
+	signal(SIGPIPE, SIG_IGN);
 	server.runServer();
 	return 0;
 }

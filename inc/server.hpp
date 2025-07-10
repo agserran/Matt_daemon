@@ -18,17 +18,18 @@ private:
 	std::set<int> clients;
 	Tintin *tintin = new Tintin();
 	int lock_fd;
+	int	epoll_fd;
 
 public:
 	Server();
 	Server(const Server &copy);
 	Server &operator=(const Server &other);
 	~Server();
-	void runServer();
-	void signalHandler();
-	void shutDown(int socket_fd, int epoll_fd);
-	void createFile();
-	void unlinkFile();
+	void	runServer();
+	void	shutDown();
+	void	createFile();
+	void	unlinkFile();
+	void	statusChecker();
 };
 
 #endif
