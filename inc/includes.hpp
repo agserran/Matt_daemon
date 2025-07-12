@@ -8,6 +8,7 @@
 #include	<iterator>
 #include	<sys/epoll.h>
 #include	<netinet/ip.h>
+#include	<sys/wait.h>
 #include	<sys/socket.h>
 #include	<unistd.h>
 #include	<ctime>

@@ -72,9 +72,11 @@ void	Server::statusChecker()
 			this->shutDown();
 			break;
 		
-		case	SIGKILL:
-			tintin->writeLog("[INFO] SIGKILL CAUGHT");
+		case	SIGQUIT:
+			tintin->writeLog("[INFO] SIGQUIT CAUGHT");
 			this->shutDown();
+			signal(SIGQUIT, SIG_DFL);
+			raise(SIGQUIT);
 			break;
 	}
 }
