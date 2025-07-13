@@ -28,8 +28,6 @@ Server &Server::operator=(const Server &other)
 
 Server::~Server()
 {
-	close(socket_fd);
-	tintin->writeLog("[INFO] Server closed");
 	delete tintin;
 }
 
@@ -46,8 +44,9 @@ void Server::unlinkFile()
 	}
 }
 
-void Server::shutDown(int socket_fd, int epoll_fd)
+void Server::shutDown()
 {
+	tintin->writeLog("[INFO] Server closed");
 	for (int fd : Server::clients)
 	{
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
@@ -60,9 +59,31 @@ void Server::shutDown(int socket_fd, int epoll_fd)
 	unlinkFile();
 }
 
+void	Server::statusChecker()
+{
+	switch (sig) {
+		case SIGINT:
+			tintin->writeLog("[INFO] SIGINT CAUGHT");
+			this->shutDown();
+			break;
+		
+		case	SIGTERM:
+			tintin->writeLog("[INFO] SIGTERM CAUGHT");
+			this->shutDown();
+			break;
+		
+		case	SIGQUIT:
+			tintin->writeLog("[INFO] SIGQUIT CAUGHT");
+			this->shutDown();
+			signal(SIGQUIT, SIG_DFL);
+			raise(SIGQUIT);
+			break;
+	}
+}
+
 void Server::runServer()
 {
-	int epoll_fd = epoll_create(10);
+	epoll_fd = epoll_create(10);
 	if (epoll_fd == -1)
 	{
 		tintin->writeLog("[ERROR] error epoll");
@@ -90,7 +111,6 @@ void Server::runServer()
 		exit(EXIT_FAILURE);
 	}
 
-	// 3) listen()
 	if (listen(socket_fd, MAX_CLIENTS) < 0)
 	{
 		tintin->writeLog(std::string("[ERROR] listen failed"));
@@ -104,17 +124,34 @@ void Server::runServer()
 		close(epoll_fd);
 		exit(EXIT_FAILURE);
 	}
+	tintin->writeLog("[INFO] server created");
 	while (true)
 	{
+		if (sig != 0)
+		{
+			this->statusChecker();
+			return;
+		}	
 		int num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
 
 		if (num_events < 0)
 		{
-			if (num_events == EINTR)
+			if (errno == EINTR)
+			{
+				if (sig != 0)
+				{
+					this->statusChecker();
+					return;
+				}
 				continue;
-			tintin->writeLog("[ERROR] epoll_wait");
+			}
+			else
+			{
+				tintin->writeLog("[ERROR] epoll_wait");
+			}	
 			break;
 		}
+		
 		for (int i = 0; i < num_events; i++)
 		{
 			if (events[i].data.fd == socket_fd)
@@ -173,7 +210,7 @@ void Server::runServer()
 							msg.pop_back();
 						if (msg == "quit")
 						{
-							Server::shutDown(socket_fd, epoll_fd);
+							Server::shutDown();
 							return;
 						}
 

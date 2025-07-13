@@ -16,8 +16,6 @@ void my_daemonize()
 	
 	if (setsid() < 0) //if < 0 fail, on success the child process becomes the session leader
 		exit(EXIT_FAILURE);
-	
-	//SIGNALHANDLER
 
 	pid = fork();
 
@@ -45,6 +43,9 @@ int main()
 		fatalError("YOU NEED ROOT PERMISSIONS");
 	}
 	my_daemonize();
+	std::signal(SIGINT, signalHandle);
+	std::signal(SIGTERM, signalHandle);
+	std::signal(SIGQUIT, signalHandle);
 	Server server;
 	server.createFile();
 	server.runServer();
