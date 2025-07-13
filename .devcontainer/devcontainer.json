@@ -1,0 +1,27 @@
+{
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"kube.42header",
+				"mine.cpplint",
+				"ms-vscode.cmake-tools",
+				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
+				"ms-vscode.cpptools-themes",
+				"twxs.cmake"
+			],
+			"settings": {
+				"42header.email": "bazuara@student.42madrid.com",
+				"42header.username": "bazuara",
+				"C_Cpp.clang_format_fallbackStyle": "Google",
+				"C_Cpp.autoAddFileAssociations": false,
+				"editor.formatOnPaste": true,
+				"editor.formatOnSave": true,
+				"git.openRepositoryInParentFolders": "never"
+			}
+		}
+	}
+    }
