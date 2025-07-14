@@ -1,31 +1,31 @@
 #ifndef INCLUDES_HPP
-# define INCLUDES_HPP
+#define INCLUDES_HPP
 
-#include	<iostream>
-#include	<string>
-#include	<vector>
-#include	<map>
-#include	<iterator>
-#include	<sys/epoll.h>
-#include	<netinet/ip.h>
-#include	<sys/wait.h>
-#include	<sys/socket.h>
-#include	<unistd.h>
-#include	<ctime>
-#include	<fstream>
-#include	<sys/stat.h>
-#include	<exception>
-#include	<fcntl.h>
-#include	<set>
-#include	<signal.h>
-#include	<sys/file.h>
-#include	<csignal>
-#include	<signal.h>
-#include	<atomic>
+#include <fcntl.h>
+#include <netinet/ip.h>
+#include <signal.h>
+#include <sys/epoll.h>
+#include <sys/file.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-extern volatile sig_atomic_t	sig;
+#include <atomic>
+#include <csignal>
+#include <ctime>
+#include <exception>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
-void	fatalError(const std::string what);
-void	signalHandle(int sign);
+extern volatile sig_atomic_t sig;
+
+void fatalError(const std::string what);
+void signalHandle(int sign);
 
 #endif
