@@ -53,6 +53,9 @@ for i in {1..4}; do
 done
 sleep 2
 
+echo "Mata el proceso Matt_daemon para limpiar:"
+ps aux | grep "Matt_daemon" | grep -v grep | awk '{print $2}' | xargs kill -9
+
 echo -e "\n🖥️  Ejecuta en una terminal nueva para ver el proceso activo:"
 echo "watch -n 1 'ps aux | grep \"[M]att_daemon\"'"
 
